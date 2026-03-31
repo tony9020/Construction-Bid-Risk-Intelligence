@@ -201,3 +201,5 @@ The application uses Gemini's `response_mime_type="application/json"` to ensure 
 ## License
 
 This project is for demonstration purposes. Please ensure compliance with Google Gemini API terms of service and applicable data privacy regulations when processing construction bid documents.
+
+This project is licensed under the MIT License.
