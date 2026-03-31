@@ -55,6 +55,13 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
           setAnalysisStatus(statusUpdates[currentIndex]);
         } else {
           setAnalysisStatus("✅ Analysis complete! Preparing results...");
+          // Auto-clear loading after 10 seconds to prevent stuck state
+          setTimeout(() => {
+            if (loading) {
+              console.log('Auto-clearing loading state after timeout');
+              setAnalysisStatus("⚠️ Taking longer than expected...");
+            }
+          }, 10000);
           clearInterval(statusInterval);
         }
       }, 3000); // Update every 3 seconds
@@ -66,12 +73,24 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
   }, [loading]);
 
   const handleFile = useCallback(async (file: File) => {
+    console.log('handleFile called with:', file.name);
     setFileName(file.name);
     setStartTime(Date.now());
     setElapsedTime(0);
-    await analyze(file);
-    const finalTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
-    onAnalysisComplete(finalTime);
+    console.log('Starting analysis...');
+    
+    try {
+      await analyze(file);
+      const finalTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
+      console.log('Analysis completed, calling onAnalysisComplete with time:', finalTime);
+      
+      // Add a small delay to ensure state is properly set
+      setTimeout(() => {
+        onAnalysisComplete(finalTime);
+      }, 500);
+    } catch (error) {
+      console.log('Analysis failed:', error);
+    }
   }, [analyze, onAnalysisComplete, startTime]);
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {

@@ -27,7 +27,21 @@ export const App: React.FC = () => {
   }, [loading, error, data]);
 
   const handleAnalysisComplete = (timeTaken: number) => {
+    console.log('handleAnalysisComplete called with time:', timeTaken);
+    console.log('Current data state in App:', data);
+    console.log('Current loading state in App:', loading);
+    console.log('Current error state in App:', error);
     setAnalysisTime(timeTaken);
+    
+    // Force state check after a short delay
+    setTimeout(() => {
+      console.log('Delayed state check - data:', data, 'loading:', loading, 'error:', error);
+      if (data && !loading && !error) {
+        console.log('Manually setting app state to success');
+        setAppState('success');
+      }
+    }, 1000);
+    
     // The actual state management is handled by the useBidAnalysis hook
   };
 
@@ -38,7 +52,9 @@ export const App: React.FC = () => {
   };
 
   // Render based on app state
+  console.log('Rendering with appState:', appState, 'data:', data);
   if (appState === 'success' && data) {
+    console.log('Rendering Dashboard with data:', data);
     return (
       <div className="min-h-screen bg-slate-900">
         <div className="fixed top-4 right-4 z-50">

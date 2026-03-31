@@ -73,6 +73,10 @@ export const useBidAnalysis = (): UseBidAnalysisReturn => {
 
       const result: BidAnalysis = await response.json();
       console.log('Analysis result:', result);
+      console.log('Result type:', typeof result);
+      console.log('Has entities:', result.entities && Array.isArray(result.entities));
+      console.log('Entity count:', result.entities?.length);
+      console.log('Project name:', result.project_name);
       setData(result);
 
     } catch (err) {
@@ -81,6 +85,9 @@ export const useBidAnalysis = (): UseBidAnalysisReturn => {
       console.log('Error message:', errorMessage);
       setError(errorMessage);
     } finally {
+      console.log('Finally block - setting loading to false');
+      console.log('Current data state:', data);
+      console.log('Current error state:', error);
       setLoading(false);
     }
   }, []);
