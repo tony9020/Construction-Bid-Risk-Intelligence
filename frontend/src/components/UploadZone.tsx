@@ -11,6 +11,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
   const [fileName, setFileName] = useState<string>('');
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [analysisStatus, setAnalysisStatus] = useState<string>('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer effect
@@ -32,6 +33,37 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
       }
     };
   }, [loading, startTime]);
+
+  // Status update effect
+  useEffect(() => {
+    if (loading) {
+      const statusUpdates = [
+        "📄 Validating document format...",
+        "🔍 Extracting text from PDF...",
+        "🤖 Sending to Gemini AI for analysis...",
+        "📊 Identifying risk entities...",
+        "⚡ Calculating risk scores...",
+        "🎯 Finalizing analysis results..."
+      ];
+
+      let currentIndex = 0;
+      setAnalysisStatus(statusUpdates[0]);
+
+      const statusInterval = setInterval(() => {
+        currentIndex++;
+        if (currentIndex < statusUpdates.length) {
+          setAnalysisStatus(statusUpdates[currentIndex]);
+        } else {
+          setAnalysisStatus("✅ Analysis complete! Preparing results...");
+          clearInterval(statusInterval);
+        }
+      }, 3000); // Update every 3 seconds
+
+      return () => clearInterval(statusInterval);
+    } else {
+      setAnalysisStatus('');
+    }
+  }, [loading]);
 
   const handleFile = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -74,6 +106,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
     setFileName('');
     setStartTime(null);
     setElapsedTime(0);
+    setAnalysisStatus('');
   }, [reset]);
 
   if (error) {
@@ -124,10 +157,19 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
             </div>
             
             <h3 className="text-lg font-medium text-white mb-2">Gemini is analyzing your bid document...</h3>
-            <p className="text-slate-500 text-sm mb-2">Extracting entities from {fileName}</p>
+            <p className="text-slate-500 text-sm mb-4">Processing: {fileName}</p>
+            
+            {/* Status Display Box */}
+            <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 mb-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-xs font-medium uppercase tracking-wide">Current Status</span>
+              </div>
+              <p className="text-white text-sm font-medium">{analysisStatus || "Initializing..."}</p>
+            </div>
             
             {/* Timer display */}
-            <div className="flex items-center justify-center space-x-2 mb-2">
+            <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
               <span className="text-blue-400 text-sm font-mono">Running: {elapsedTime}s</span>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>

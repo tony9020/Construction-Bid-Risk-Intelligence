@@ -37,13 +37,18 @@ export const useBidAnalysis = (): UseBidAnalysisReturn => {
       const formData = new FormData();
       formData.append('file', file);
 
+      console.log('Making API request to: http://localhost:8000/analyze');
       const response = await fetch('http://localhost:8000/analyze', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.log('Error data:', errorData);
         let errorMessage = 'Analysis failed';
 
         switch (response.status) {
@@ -67,10 +72,13 @@ export const useBidAnalysis = (): UseBidAnalysisReturn => {
       }
 
       const result: BidAnalysis = await response.json();
+      console.log('Analysis result:', result);
       setData(result);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.log('Caught error:', err);
+      console.log('Error message:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);

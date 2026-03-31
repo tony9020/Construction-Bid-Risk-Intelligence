@@ -13,12 +13,14 @@ export const App: React.FC = () => {
 
   // Update app state based on hook state
   React.useEffect(() => {
+    console.log('App state update:', { loading, error, data });
     if (loading) {
       setAppState('loading');
     } else if (error) {
       setAppState('error');
     } else if (data) {
       setAppState('success');
+      console.log('Setting app state to success with data:', data);
     } else {
       setAppState('idle');
     }
