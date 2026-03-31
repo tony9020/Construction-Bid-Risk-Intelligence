@@ -43,7 +43,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
         "🤖 Sending to Gemini AI for analysis...",
         "📊 Identifying risk entities...",
         "⚡ Calculating risk scores...",
-        "🎯 Finalizing analysis results..."
+        "🎯 Finalizing analysis results...",
+        "✅ Analysis complete! Preparing results..."
       ];
 
       let currentIndex = 0;
@@ -54,17 +55,10 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
         if (currentIndex < statusUpdates.length) {
           setAnalysisStatus(statusUpdates[currentIndex]);
         } else {
-          setAnalysisStatus("✅ Analysis complete! Preparing results...");
-          // Auto-clear loading after 10 seconds to prevent stuck state
-          setTimeout(() => {
-            if (loading) {
-              console.log('Auto-clearing loading state after timeout');
-              setAnalysisStatus("⚠️ Taking longer than expected...");
-            }
-          }, 10000);
+          // Keep the final status without auto-clearing
           clearInterval(statusInterval);
         }
-      }, 3000); // Update every 3 seconds
+      }, 4000); // Update every 4 seconds (slower for longer documents)
 
       return () => clearInterval(statusInterval);
     } else {
@@ -84,10 +78,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
       const finalTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
       console.log('Analysis completed, calling onAnalysisComplete with time:', finalTime);
       
-      // Add a small delay to ensure state is properly set
-      setTimeout(() => {
-        onAnalysisComplete(finalTime);
-      }, 500);
+      // Call immediately without delay
+      onAnalysisComplete(finalTime);
     } catch (error) {
       console.log('Analysis failed:', error);
     }

@@ -33,14 +33,22 @@ export const App: React.FC = () => {
     console.log('Current error state in App:', error);
     setAnalysisTime(timeTaken);
     
-    // Force state check after a short delay
+    // Force state check and transition immediately
     setTimeout(() => {
       console.log('Delayed state check - data:', data, 'loading:', loading, 'error:', error);
       if (data && !loading && !error) {
         console.log('Manually setting app state to success');
         setAppState('success');
+      } else {
+        console.log('State check failed - data:', !!data, 'loading:', loading, 'error:', !!error);
       }
-    }, 1000);
+    }, 100);
+    
+    // Also try immediately
+    if (data && !loading && !error) {
+      console.log('Immediately setting app state to success');
+      setAppState('success');
+    }
     
     // The actual state management is handled by the useBidAnalysis hook
   };
@@ -53,6 +61,13 @@ export const App: React.FC = () => {
 
   // Render based on app state
   console.log('Rendering with appState:', appState, 'data:', data);
+  
+  // Fallback: if we have data but appState is wrong, force success
+  if (data && !loading && !error && appState !== 'success') {
+    console.log('Fallback: Forcing app state to success due to data presence');
+    setAppState('success');
+  }
+  
   if (appState === 'success' && data) {
     console.log('Rendering Dashboard with data:', data);
     return (
