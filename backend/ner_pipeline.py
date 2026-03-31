@@ -4,7 +4,11 @@ import json
 import re
 from datetime import datetime, timedelta
 from typing import Dict, List
+from dotenv import load_dotenv
 from schemas import BidAnalysis, ExtractedEntity
+
+# Load environment variables
+load_dotenv()
 
 # Configure Gemini API
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
