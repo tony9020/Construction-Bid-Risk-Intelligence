@@ -5,9 +5,10 @@ import { EntityHighlight } from './EntityHighlight';
 
 interface DashboardProps {
   analysis: BidAnalysis;
+  timeTaken?: number; // Time in seconds
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ analysis }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ analysis, timeTaken }) => {
   // Calculate statistics
   const totalEntities = analysis.entities.length;
   const highRiskCount = analysis.entities.filter(e => e.risk_level === 'HIGH').length;
@@ -20,8 +21,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ analysis }) => {
         <h1 className="text-white text-2xl font-semibold">
           {analysis.project_name}
         </h1>
-        <div className="bg-slate-700 text-slate-300 text-sm px-3 py-1 rounded-full">
-          {analysis.total_pages} pages analyzed
+        <div className="flex items-center space-x-3">
+          {timeTaken && (
+            <div className="bg-green-600 text-white text-sm px-3 py-1 rounded-full flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Analysis completed in {timeTaken}s</span>
+            </div>
+          )}
+          <div className="bg-slate-700 text-slate-300 text-sm px-3 py-1 rounded-full">
+            {analysis.total_pages} pages analyzed
+          </div>
         </div>
       </div>
 

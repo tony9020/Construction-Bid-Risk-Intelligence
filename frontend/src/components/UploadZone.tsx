@@ -1,20 +1,46 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useBidAnalysis } from '../hooks/useBidAnalysis';
 
 interface UploadZoneProps {
-  onAnalysisComplete: () => void;
+  onAnalysisComplete: (timeTaken: number) => void;
 }
 
 export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
   const { analyze, loading, error, reset } = useBidAnalysis();
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Timer effect
+  useEffect(() => {
+    if (loading && startTime) {
+      intervalRef.current = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 100);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [loading, startTime]);
 
   const handleFile = useCallback(async (file: File) => {
     setFileName(file.name);
+    setStartTime(Date.now());
+    setElapsedTime(0);
     await analyze(file);
-    onAnalysisComplete();
-  }, [analyze, onAnalysisComplete]);
+    const finalTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
+    onAnalysisComplete(finalTime);
+  }, [analyze, onAnalysisComplete, startTime]);
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -46,6 +72,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
   const handleRetry = useCallback(() => {
     reset();
     setFileName('');
+    setStartTime(null);
+    setElapsedTime(0);
   }, [reset]);
 
   if (error) {
@@ -88,14 +116,23 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
         <div className="w-full max-w-md">
           <div className="border-2 border-dashed border-blue-500 rounded-xl p-8 text-center">
             <div className="mb-6">
-              <div className="flex justify-center space-x-2">
-                <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              {/* Google-style circular loading */}
+              <div className="relative inline-flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute w-8 h-8 border-4 border-transparent border-t-blue-300 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
               </div>
             </div>
+            
             <h3 className="text-lg font-medium text-white mb-2">Gemini is analyzing your bid document...</h3>
             <p className="text-slate-500 text-sm mb-2">Extracting entities from {fileName}</p>
+            
+            {/* Timer display */}
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <span className="text-blue-400 text-sm font-mono">Running: {elapsedTime}s</span>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            </div>
+            
             <p className="text-slate-600 text-xs">Large documents may take 30–60 seconds</p>
           </div>
         </div>

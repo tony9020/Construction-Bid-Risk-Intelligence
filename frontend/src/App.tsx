@@ -9,6 +9,7 @@ type AppState = 'idle' | 'loading' | 'error' | 'success';
 export const App: React.FC = () => {
   const { data, loading, error, reset } = useBidAnalysis();
   const [appState, setAppState] = useState<AppState>('idle');
+  const [analysisTime, setAnalysisTime] = useState<number>(0);
 
   // Update app state based on hook state
   React.useEffect(() => {
@@ -23,14 +24,15 @@ export const App: React.FC = () => {
     }
   }, [loading, error, data]);
 
-  const handleAnalysisComplete = () => {
-    // This will be called when UploadZone completes analysis
+  const handleAnalysisComplete = (timeTaken: number) => {
+    setAnalysisTime(timeTaken);
     // The actual state management is handled by the useBidAnalysis hook
   };
 
   const handleReset = () => {
     reset();
     setAppState('idle');
+    setAnalysisTime(0);
   };
 
   // Render based on app state
@@ -45,7 +47,7 @@ export const App: React.FC = () => {
             Analyze Another Document
           </button>
         </div>
-        <Dashboard analysis={data} />
+        <Dashboard analysis={data} timeTaken={analysisTime} />
       </div>
     );
   }
