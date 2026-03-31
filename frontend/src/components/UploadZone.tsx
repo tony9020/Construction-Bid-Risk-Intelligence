@@ -6,12 +6,13 @@ interface UploadZoneProps {
 }
 
 export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
-  const { analyze, loading, error, reset } = useBidAnalysis();
+  const { analyze, loading, error, reset, data } = useBidAnalysis();
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [analysisStatus, setAnalysisStatus] = useState<string>('');
+  const [showResultsModal, setShowResultsModal] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer effect
@@ -66,6 +67,17 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
     }
   }, [loading]);
 
+  // Effect to detect when analysis is complete
+  useEffect(() => {
+    if (data && !loading && !error) {
+      console.log('Analysis completed with data:', data);
+      // Show results button after a short delay
+      setTimeout(() => {
+        setShowResultsModal(true);
+      }, 1000);
+    }
+  }, [data, loading, error]);
+
   const handleFile = useCallback(async (file: File) => {
     console.log('handleFile called with:', file.name);
     setFileName(file.name);
@@ -118,6 +130,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
     setStartTime(null);
     setElapsedTime(0);
     setAnalysisStatus('');
+    setShowResultsModal(false);
   }, [reset]);
 
   if (error) {
@@ -194,60 +207,142 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) =>
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-8">
-      <div className="w-full max-w-md">
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={() => document.getElementById('file-input')?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-            isDragOver
-              ? 'border-blue-500 bg-slate-800/50'
-              : 'border-slate-600 hover:border-blue-500 hover:bg-slate-800/50'
-          }`}
-        >
-          <input
-            id="file-input"
-            type="file"
-            accept=".pdf"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          
-          <div className="mb-6">
-            <svg
-              className="mx-auto h-16 w-16 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-          </div>
-          
-          <h3 className="text-lg font-medium text-slate-300 mb-2">
-            Drop your bid document here
-          </h3>
-          
-          <p className="text-slate-500 text-sm mb-3">
-            PDF files only · up to 50MB
-          </p>
-          
-          <div className="flex items-center justify-center space-x-2">
-            <span className="text-slate-600 text-xs">Powered by</span>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-slate-600 text-xs">Powered by Gemini 2.5 Flash</span>
+    <>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-8">
+        <div className="w-full max-w-md">
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => document.getElementById('file-input')?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+              isDragOver
+                ? 'border-blue-500 bg-slate-800/50'
+                : 'border-slate-600 hover:border-blue-500 hover:bg-slate-800/50'
+            }`}
+          >
+            <input
+              id="file-input"
+              type="file"
+              accept=".pdf"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </div>
+            
+            <h3 className="text-lg font-medium text-slate-300 mb-2">
+              Drop your bid document here
+            </h3>
+            
+            <p className="text-slate-500 text-sm mb-3">
+              PDF files only · up to 50MB
+            </p>
+            
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-slate-600 text-xs">Powered by</span>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-slate-600 text-xs">Powered by Gemini 2.5 Flash</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      
+      {/* Results Modal */}
+      {showResultsModal && data && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">🎯 Analysis Results Ready!</h2>
+              <button
+                onClick={() => setShowResultsModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-slate-300 mb-2">
+                <strong>Project:</strong> {data?.project_name || 'Unknown'}
+              </p>
+              <p className="text-slate-300 mb-2">
+                <strong>Entities Found:</strong> {data?.entities.length || 0}
+              </p>
+              <p className="text-slate-300 mb-4">
+                <strong>Analysis Time:</strong> {elapsedTime}s
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                // Open results in new window
+                const resultsData = JSON.stringify(data, null, 2);
+                const newWindow = window.open('', '_blank');
+                if (newWindow) {
+                  newWindow.document.write(`
+                    <html>
+                      <head>
+                        <title>Analysis Results - ${data?.project_name || 'Unknown'}</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 20px; background: #1e293b; color: white; }
+                          .entity { margin: 10px 0; padding: 10px; border-radius: 5px; }
+                          .high { background: #7f1d1d; border: 1px solid #991b1b; }
+                          .medium { background: #78350f; border: 1px solid #92400e; }
+                          .low { background: #14532d; border: 1px solid #166534; }
+                          pre { background: #0f172a; padding: 10px; border-radius: 5px; overflow-x: auto; }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>Analysis Results: ${data?.project_name || 'Unknown'}</h1>
+                        <p>Total Entities: ${data?.entities.length || 0}</p>
+                        <p>Analysis Time: ${elapsedTime}s</p>
+                        <h2>Raw Data:</h2>
+                        <pre>${resultsData}</pre>
+                      </body>
+                    </html>
+                  `);
+                }
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors mb-3"
+            >
+              🚀 Open Results in New Window
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowResultsModal(false);
+                reset();
+                setFileName('');
+                setStartTime(null);
+                setElapsedTime(0);
+                setAnalysisStatus('');
+              }}
+              className="w-full bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              📄 Analyze Another Document
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
